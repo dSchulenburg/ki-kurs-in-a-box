@@ -1,0 +1,7 @@
+# Zeilenenden vereinheitlichen.
+#
+# Wichtig fuer pruefe-webservice.sh: Mit Windows-Zeilenenden scheitert ein
+# Shell-Skript auf Linux und macOS mit "bad interpreter", und die Meldung
+# sagt einem nicht, woran es liegt.
+* text=auto eol=lf
+*.sh text eol=lf

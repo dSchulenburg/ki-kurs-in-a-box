@@ -1,0 +1,145 @@
+# KI-Kurs "in a Box" — ein kompletter Moodle-Kurs auf dem eigenen Rechner
+# ===========================================================================
+# Alles laeuft lokal: kein Server, keine Domain, keine Anmeldung irgendwo.
+#
+#   docker compose up -d
+#
+#   Moodle:  http://localhost:8080   (admin / KiKurs-Demo-2026)
+#   n8n:     http://localhost:5678   (Workflow "Postfach-Triage" liegt bereit)
+#   MCP:     http://localhost:8000/mcp
+#
+# Der Erststart dauert zwei bis drei Minuten: Moodle installiert sich, spielt
+# den Kurs ein und richtet seine Schnittstelle ein. Geduld beim ersten Aufruf.
+#
+# Steady-state: 5 Container (moodle, moodle-db, moodle-mcp, n8n, mailserver).
+# 'mailseed' ist ein Einmal-Init, der sich nach dem Befuellen selbst beendet.
+#
+# Die Images werden aus Docker Hub gezogen. Wer sie selbst bauen will, findet
+# die Bauanleitungen nicht hier, sondern beim Autor (siehe README).
+name: ki-kurs
+
+services:
+  # --- Datenbank fuer Moodle -------------------------------------------------
+  moodle-db:
+    image: mariadb:11.4
+    container_name: ki-kurs-db
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-ki-kurs-root}
+      MARIADB_DATABASE: moodle
+      MARIADB_USER: moodle
+      MARIADB_PASSWORD: ${DB_PASSWORD:-ki-kurs-moodle}
+    volumes:
+      - moodle_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks: [ki-kurs-net]
+
+  # --- Moodle mit fertigem Kurs ---------------------------------------------
+  moodle:
+    image: dadalama/ki-kurs-moodle:1.1
+    container_name: ki-kurs-moodle
+    restart: unless-stopped
+    depends_on:
+      moodle-db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      MOODLE_DB_PASSWORD: ${DB_PASSWORD:-ki-kurs-moodle}
+      MOODLE_ADMIN_PASS: ${MOODLE_ADMIN_PASS:-KiKurs-Demo-2026}
+    volumes:
+      # Moodle-Code und Konfiguration liegen IM Image, deshalb hier nur die
+      # Dateiablage als Volume.
+      - moodle_data:/var/www/moodledata
+    networks: [ki-kurs-net]
+
+  # --- Moodle-MCP: damit eine KI im Kurs arbeiten kann -----------------------
+  moodle-mcp:
+    image: dadalama/ki-kurs-moodle-mcp:1.0
+    container_name: ki-kurs-mcp
+    restart: unless-stopped
+    depends_on:
+      - moodle
+    ports:
+      - "8000:8000"
+    environment:
+      # Port 8080 ist der INTERNE Zugang des Moodle-Containers. Er setzt den
+      # Host-Header auf die Adresse, die Moodle von sich selbst erwartet.
+      # Ueber "http://moodle" (Port 80) kaeme statt Daten eine Weiterleitung.
+      MOODLE_URL: http://moodle:8080
+      # Adresse fuer die Links in den Antworten. Der MCP redet ueber
+      # "moodle:8080" mit Moodle, der Mensch davor sitzt aber vor
+      # "localhost:8080". Ohne die Trennung waere jeder ausgegebene Link tot.
+      MOODLE_PUBLIC_URL: http://localhost:8080
+      MOODLE_TOKEN: ${MOODLE_MCP_TOKEN:-0ercamp2026werkbankdemotoken1234}
+      # Lokale Box, fester Schluessel. Er schuetzt nichts, er erfuellt nur die
+      # Erwartung des Servers, dass ein Schluessel mitkommt.
+      MCP_API_KEY: ${MCP_API_KEY:-ki-kurs-lokal}
+      PORT: 8000
+      NODE_ENV: production
+    networks: [ki-kurs-net]
+
+  # --- n8n: Automatisierungs-Sandbox mit fertigem Workflow -------------------
+  n8n:
+    image: dadalama/ki-kurs-n8n:1.0
+    container_name: ki-kurs-n8n
+    restart: unless-stopped
+    user: "node"
+    depends_on:
+      - mailserver
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Europe/Berlin
+      - N8N_SECURE_COOKIE=false
+      # Fester Schluessel unbedenklich: vorgebacken ist nur die Verbindung zum
+      # lokalen Demo-Postfach. Einen eigenen KI-Zugang traegt jede:r selbst ein.
+      - N8N_ENCRYPTION_KEY=ki-kurs-local
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks: [ki-kurs-net]
+
+  # --- Demo-Postfach (GreenMail, rein lokal) --------------------------------
+  mailserver:
+    image: greenmail/standalone:2.1.0
+    container_name: ki-kurs-mail
+    restart: unless-stopped
+    environment:
+      # Ein Demo-Postfach: demo@kurs.local / demo123
+      # Ports: SMTP 3025, IMAP 3143
+      - GREENMAIL_OPTS=-Dgreenmail.setup.test.all -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users=demo:demo123@kurs.local -Dgreenmail.verbose
+    ports:
+      - "3143:3143"   # IMAP, falls du mit einem Mail-Programm hineinschauen willst
+      - "3025:3025"   # SMTP
+    networks: [ki-kurs-net]
+
+  # --- Einmal-Init: legt die Demo-Mails ins Postfach und beendet sich --------
+  mailseed:
+    image: dadalama/ki-kurs-mailseed:1.0
+    container_name: ki-kurs-mailseed
+    restart: "no"
+    depends_on:
+      - mailserver
+    networks: [ki-kurs-net]
+
+networks:
+  ki-kurs-net:
+    driver: bridge
+
+volumes:
+  moodle_db:
+  moodle_data:
+  n8n_data:
