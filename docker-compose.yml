@@ -45,7 +45,7 @@ services:
 
   # --- Moodle mit fertigem Kurs ---------------------------------------------
   moodle:
-    image: dadalama/ki-kurs-moodle:1.1
+    image: dadalama/ki-kurs-moodle:1.2
     container_name: ki-kurs-moodle
     restart: unless-stopped
     depends_on:
@@ -64,7 +64,7 @@ services:
 
   # --- Moodle-MCP: damit eine KI im Kurs arbeiten kann -----------------------
   moodle-mcp:
-    image: dadalama/ki-kurs-moodle-mcp:1.0
+    image: dadalama/ki-kurs-moodle-mcp:1.1
     container_name: ki-kurs-mcp
     restart: unless-stopped
     depends_on:

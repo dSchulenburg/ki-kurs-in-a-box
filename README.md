@@ -42,7 +42,7 @@ Emulation, dann dauert der Erststart eher zehn bis fünfzehn Minuten.
 ## Die KI im Kurs arbeiten lassen
 
 Die Box bringt eine **fertig eingerichtete Schnittstelle** mit: Webservices
-sind aktiviert, ein Service mit 83 Funktionen ist angelegt, ein Token liegt
+sind aktiviert, ein Service mit 87 Funktionen ist angelegt, ein Token liegt
 bereit. Es muss niemand vorher durch die Moodle-Administration klicken.
 
 In **Claude Code** eintragen (`.mcp.json` im Projektordner):
@@ -121,7 +121,7 @@ docker compose down -v     # alles zurück auf Anfang, Kurs wird neu eingespielt
 Willst du die Box ganz loswerden, danach noch die Images entfernen:
 
 ```bash
-docker rmi dadalama/ki-kurs-moodle:1.1 dadalama/ki-kurs-moodle-mcp:1.0 \
+docker rmi dadalama/ki-kurs-moodle:1.2 dadalama/ki-kurs-moodle-mcp:1.1 \
            dadalama/ki-kurs-n8n:1.0 dadalama/ki-kurs-mailseed:1.0
 ```
 
