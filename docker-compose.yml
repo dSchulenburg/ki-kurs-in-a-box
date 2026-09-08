@@ -45,7 +45,7 @@ services:
 
   # --- Moodle mit fertigem Kurs ---------------------------------------------
   moodle:
-    image: dadalama/ki-kurs-moodle:1.2
+    image: dadalama/ki-kurs-moodle:2
     container_name: ki-kurs-moodle
     restart: unless-stopped
     depends_on:

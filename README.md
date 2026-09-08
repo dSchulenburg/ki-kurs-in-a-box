@@ -109,6 +109,7 @@ in n8n an (*Credentials → Header Auth*). Der Kurs führt dich hindurch.
 | `port is already allocated` | Ein Port ist belegt. In der `docker-compose.yml` vorne eine andere Zahl eintragen, z. B. `8081:80`. |
 | MCP findet keine Kurse | Moodle ist noch beim Erststart. Warten, dann erneut. |
 | Claude Code sieht die Werkzeuge nicht | Schlüssel prüfen (`x-api-key: ki-kurs-lokal`) und ob die URL auf `/mcp` endet. |
+| Eine Sicherung wird nie fertig | Der Hintergrunddienst der Box stand still. Zwei Befehle bringen sie zu Ende: siehe [HILFE-haengende-backups.md](HILFE-haengende-backups.md). Ab Image `2` erledigt die Box das beim Start selbst. |
 | Es hakt irgendwo anders | Kompletter Neustart bei null: `docker compose down -v && docker compose up -d`. |
 
 ## Stoppen und zurücksetzen
@@ -121,7 +122,7 @@ docker compose down -v     # alles zurück auf Anfang, Kurs wird neu eingespielt
 Willst du die Box ganz loswerden, danach noch die Images entfernen:
 
 ```bash
-docker rmi dadalama/ki-kurs-moodle:1.2 dadalama/ki-kurs-moodle-mcp:1.1 \
+docker rmi dadalama/ki-kurs-moodle:2 dadalama/ki-kurs-moodle-mcp:1.1 \
            dadalama/ki-kurs-n8n:1.0 dadalama/ki-kurs-mailseed:1.0
 ```
 
