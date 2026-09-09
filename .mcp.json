@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "moodle-box": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp",
+      "headers": { "x-api-key": "ki-kurs-lokal" }
+    }
+  }
+}

@@ -45,7 +45,22 @@ Die Box bringt eine **fertig eingerichtete Schnittstelle** mit: Webservices
 sind aktiviert, ein Service mit 87 Funktionen ist angelegt, ein Token liegt
 bereit. Es muss niemand vorher durch die Moodle-Administration klicken.
 
-In **Claude Code** eintragen (`.mcp.json` im Projektordner):
+**In diesem Ordner musst du nichts tun.** Neben dieser Datei liegt ein fertiges
+`.mcp.json`. Wer **Claude Code** hier startet, wird beim ersten Mal gefragt, ob
+der Server `moodle-box` benutzt werden darf — ja sagen, fertig.
+
+**Wenn du woanders arbeitest** — und das ist der Normalfall, dein eigenes
+Material entsteht ja in einem eigenen Ordner — meldest du den Server einmalig
+nutzerweit an. Ein Befehl, gilt danach in jedem Ordner:
+
+```bash
+claude mcp add --transport http --scope user moodle-box http://localhost:8000/mcp --header "x-api-key: ki-kurs-lokal"
+```
+
+Prüfen mit `claude mcp list`, wieder loswerden mit
+`claude mcp remove --scope user moodle-box`.
+
+Von Hand geht es auch — das ist genau der Inhalt der mitgelieferten Datei:
 
 ```json
 {
