@@ -1,5 +1,6 @@
 # KI-Box auf einem frischen Windows-Rechner einrichten
-# Git, WSL2, Docker Desktop, Node LTS, Gemini CLI, KI-Kurs-in-a-Box, MCP-Anbindung
+# Git, WSL2, Docker Desktop, Node LTS, Gemini CLI, KI-Kurs-in-a-Box, MCP-Anbindung,
+# dazu das Image der OER-Werkbank
 #
 # Aufruf: PowerShell ALS ADMINISTRATOR, dann dieses Skript ausfuehren.
 # Das Skript ist wiederholbar. Wenn es "NEUSTART" meldet: neu starten,
@@ -114,7 +115,18 @@ Push-Location $ziel
 docker compose up -d
 Pop-Location
 
+# --- 8. Werkbank vorab ziehen -------------------------------------------------
+# Nur das Image. Gestartet wird sie von Hand, damit man den Befehl sieht.
+Schritt 'OER-Werkbank (Image)'
+docker pull dadalama/oercamp-werkbank
+Ok 'Werkbank-Image liegt bereit'
+
 Write-Host "`nFertig." -ForegroundColor Green
 Write-Host '  Moodle:  http://localhost:8080   (admin / KiKurs-Demo-2026)'
 Write-Host '  Erststart dauert zwei bis drei Minuten. Fortschritt: docker compose logs -f moodle'
 Write-Host "  Dann:    cd $ziel ; gemini   -> im Chat /mcp eingeben, moodle-box muss erscheinen"
+Write-Host ''
+Write-Host '  Werkbank in einem leeren Ordner starten:'
+Write-Host '    mkdir $HOME\lernmodul; cd $HOME\lernmodul'
+Write-Host '    docker run --rm -it -p 5173:5173 -v "${PWD}:/work" dadalama/oercamp-werkbank'
+Write-Host '  Dann http://localhost:5173 oeffnen.'
